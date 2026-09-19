@@ -2,7 +2,7 @@ import serial
 import time
 import threading
 from chafon_rfid.base import ReaderCommand
-from chafon_rfid.command import G2_TAG_INVENTORY
+from chafon_rfid.command import G2_TAG_INVENTORY, CF_SET_WORK_MODE_18
 from chafon_rfid.uhfreader18 import G2InventoryResponseFrame as G2InventoryResponseFrame18
 from chafon_rfid.response import G2_TAG_INVENTORY_STATUS_MORE_FRAMES
 
@@ -21,6 +21,13 @@ class RFIDTracker:
         self.ser = serial.Serial(self.port, self.baud, timeout=0.1)
         print(f"🔌 Connected to {self.port} at {self.baud} baud.")
         
+        # Force the reader into Command/Answer Mode on startup
+        print(f"[{self.port}] Forcing reader into Command Mode...")
+        data_payload = [0x00, 0x02, 0x01, 0x00, 0x01, 0x00]
+        cmd = ReaderCommand(CF_SET_WORK_MODE_18, data=data_payload)
+        self.ser.write(cmd.serialize())
+        time.sleep(0.1)
+        self.ser.read(self.ser.in_waiting) # Clear the response buffer
     def start_polling(self, callback):
         self.running = True
         self.thread = threading.Thread(target=self._poll_loop, args=(callback,))
