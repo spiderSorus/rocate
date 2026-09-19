@@ -27,16 +27,15 @@ def main():
         
         while True:
             if ser.in_waiting > 0:
-                # Read line from serial port, decoding to string
-                raw_data = ser.readline()
-                line = raw_data.decode('utf-8', errors='ignore').strip()
+                # Read all available bytes in the buffer
+                raw_data = ser.read(ser.in_waiting)
                 
-                # Only print if there's actual data
-                if line or raw_data:
-                    # Print ascii string if possible, else raw hex representation
-                    display_data = line if line else raw_data.hex()
-                    print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] 🏷️  Tag Detected: {display_data}")
-            time.sleep(0.1)
+                # Format as Hex and ASCII
+                hex_data = " ".join([f"{b:02X}" for b in raw_data])
+                ascii_data = raw_data.decode('ascii', errors='replace').replace('\r', '\\r').replace('\n', '\\n')
+                
+                print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] HEX: {hex_data}  |  ASCII: {ascii_data}")
+            time.sleep(0.05)
             
     except serial.SerialException as e:
         print(f"❌ Error opening serial port {args.port}: {e}")
