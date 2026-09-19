@@ -44,7 +44,7 @@ class RFIDTracker:
             
             # Read response frame
             length_bytes = self.ser.read(1)
-            tags_found_this_ping = 0
+            tags_found_this_ping = []
             if length_bytes:
                 length = length_bytes[0]
                 rest_of_frame = self.ser.read(length)
@@ -53,17 +53,17 @@ class RFIDTracker:
                 try:
                     resp_frame = G2InventoryResponseFrame18(frame_data)
                     for tag in resp_frame.get_tag():
-                        tags_found_this_ping += 1
                         epc = tag.epc.hex().upper()
+                        tags_found_this_ping.append(epc)
                         self.seen_tags[epc] = time.time()
                         callback(self.port, epc)
                 except Exception:
                     pass
             
-            if tags_found_this_ping == 0:
+            if not tags_found_this_ping:
                 print("❌ No Tags")
             else:
-                print(f"✅ Found {tags_found_this_ping} tag(s)")
+                print(f"✅ Found {len(tags_found_this_ping)} tag(s): {', '.join(tags_found_this_ping)}")
                 
             time.sleep(1.0)
             
