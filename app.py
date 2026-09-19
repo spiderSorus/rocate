@@ -32,10 +32,12 @@ class RFIDTracker:
         raw_cmd = inventory_cmd.serialize()
         
         while self.running:
+            print(f"[{time.strftime('%H:%M:%S')}] 📡 Pinging antenna... ", end="", flush=True)
             self.ser.write(raw_cmd)
             
             # Read response frame
             length_bytes = self.ser.read(1)
+            tags_found_this_ping = 0
             if length_bytes:
                 length = length_bytes[0]
                 rest_of_frame = self.ser.read(length)
@@ -44,20 +46,19 @@ class RFIDTracker:
                 try:
                     resp_frame = G2InventoryResponseFrame18(frame_data)
                     for tag in resp_frame.get_tag():
+                        tags_found_this_ping += 1
                         epc = tag.epc.hex().upper()
-                        
-                        # Note: The RU5106 firmware (UHFReader18) does not append RSSI in this standard command response.
-                        # For triangulation, you can use multiple readers (on different ports) and compare which ones 
-                        # can currently see the tag.
-                        
                         self.seen_tags[epc] = time.time()
-                        
-                        # Trigger the event callback
                         callback(self.port, epc)
-                        
                 except Exception:
                     pass
-            time.sleep(0.05)
+            
+            if tags_found_this_ping == 0:
+                print("❌ No Tags")
+            else:
+                print(f"✅ Found {tags_found_this_ping} tag(s)")
+                
+            time.sleep(1.0)
             
     def stop(self):
         self.running = False
