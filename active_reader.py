@@ -34,6 +34,7 @@ def main():
     parser = argparse.ArgumentParser(description="Active Reader using Chafon protocol.")
     parser.add_argument('-p', '--port', type=str, default='/dev/cu.usbserial-310', help="Serial port")
     parser.add_argument('-b', '--baud', type=int, default=57600, help="Baud rate (typically 57600 or 115200)")
+    parser.add_argument('-d', '--debug', action='store_true', help="Print raw hex responses")
     args = parser.parse_args()
 
     try:
@@ -67,6 +68,10 @@ def main():
                 if not frame_data:
                     break
                 
+                # Debug raw responses
+                if args.debug:
+                    print(f"RAW: {frame_data.hex().upper()}")
+
                 try:
                     resp_frame = G2InventoryResponseFrame18(frame_data)
                     inventory_status = resp_frame.result_status
