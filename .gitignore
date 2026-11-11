@@ -1,1 +1,13 @@
+# Virtual environments & Python cache
 venv/
+.venv/
+__pycache__/
+*.py[cod]
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+
+# OS metadata
+.DS_Store
